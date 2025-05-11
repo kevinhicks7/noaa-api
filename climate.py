@@ -22,14 +22,11 @@ def query_api(cat,params):
     else:
         return dict(response.json())
 
-def get_cities():
+def get_cities(loc_params):
     cities = []
     offset = 0
     while True:
-        loc_params = {'datasetid':'GHCND',
-                      'locationcategoryid':'CITY',
-                      'limit':'1000',
-                      'offset':str(offset)}
+        loc_params['offset'] = str(offset)
         loc_batch = query_api(cat='locations',params=loc_params)
         if 'results' not in loc_batch.keys() or len(loc_batch['results']) == 0:
             break
@@ -57,14 +54,17 @@ def post(quote):
 
 def main() -> None:
     #today = datetime.now()
-    cities = get_cities()
+    loc_params = {'datasetid':'GHCND',
+                  'locationcategoryid':'CITY',
+                  'limit':'1000'}
+    cities = get_cities(loc_params)
     us_cities = [city for city in cities if city['id'].startswith('CITY:US')]
-
+    print(len(us_cities))
     data_params = {'datasetid':'GHCND',
                    'startdate':'2010-05-01',
                    'enddate':'2010-05-01'}
-    for city in us_cities:
-        eval_city_data(city)
+    #for city in us_cities:
+    #    eval_city_data(data_params,city)
 
 if __name__ == '__main__':
     main()
