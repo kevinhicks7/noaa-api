@@ -4,17 +4,6 @@ import datetime
 import json
 from atproto import Client, Request, models
 
-def post(quote):
-    client = Client(request=request)
-    pw = os.environ.get('BSKY_CLIMATE_BOT_PW')
-    if pw is None:
-        print('no bsky account password found')
-        exit()
-    client.login('climate-bot.bsky.social', pw)
-
-    text = ''
-    client.send_post(text=text)
-
 def query_api(cat,params):
     #docs: https://www.ncdc.noaa.gov/cdo-web/webservices/v2
     ncdc_api_key = os.environ.get('NOAA_API')
@@ -46,6 +35,16 @@ def get_cities():
             break
     return cities
 
+def post(quote):
+    client = Client(request=request)
+    pw = os.environ.get('BSKY_CLIMATE_BOT_PW')
+    if pw is None:
+        print('no bsky account password found')
+        exit()
+    client.login('climate-bot.bsky.social', pw)
+
+    text = ''
+    client.send_post(text=text)
 
 def main() -> None:
     #today = datetime.now()
@@ -59,7 +58,6 @@ def main() -> None:
                    'startdate':'2010-05-01',
                    'enddate':'2010-05-01'}
     data = query_api('data',data_params)
-
 
 if __name__ == '__main__':
     main()
