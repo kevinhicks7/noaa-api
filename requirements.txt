@@ -27,6 +27,7 @@ findlibs==0.1.1
 flox==0.10.3
 fonttools==4.58.0
 fsspec==2025.3.2
+geopandas==1.0.1
 h11==0.16.0
 h5netcdf==1.6.1
 h5py==3.13.0
@@ -66,6 +67,7 @@ pycparser==2.22
 pydantic==2.11.4
 pydantic_core==2.33.2
 pydap==3.5.5
+pyogrio==0.11.0
 pyparsing==3.2.3
 pyproj==3.7.1
 pyshp==2.3.1
