@@ -5,7 +5,6 @@ import matplotlib.patheffects as path_effects
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import pandas as pd
-import cfgrib
 import xarray as xr
 from datetime import datetime,timedelta
 from atproto import Client, Request, models
@@ -16,32 +15,39 @@ import os
 def post(text,img):
     request = Request(timeout=None)  # Disable all timeouts by default.
     client = Client(request=request)
-    pw = os.environ.get('BSKY_CLIMATE_BOT_PW') # from generated app password in bsky
+    pw = os.environ.get('BSKY_APP_PASSWORD') # from generated app password in bsky
     if pw is None:
         print('no bsky account password found')
         exit()
     client.login('us-climate-bot.bsky.social', pw)
     aspect_ratio = models.AppBskyEmbedDefs.AspectRatio(height=1748, width=2930)
     client.send_image(text=text, image=img, image_alt='Temperature map of U.S.',image_aspect_ratio=aspect_ratio,)
-
+ 
 def get_data(target_date):
-    year = pd.to_datetime(target_date).year
-    dayofyear = pd.to_datetime(target_date).dayofyear
+    target_date = pd.to_datetime(target_date)
+    year = target_date.year
+    dayofyear = target_date.dayofyear
+
+    # Adjust dayofyear for leap years so it lines up with the 365-day climatology
+    is_leap = pd.Timestamp(year, 1, 1).is_leap_year
+    if is_leap and target_date.month > 2:
+        clim_dayofyear = dayofyear - 1
+    else:
+        clim_dayofyear = dayofyear
 
     # === URLs for NOAA CPC Global Unified Temperature (°C) ===
-    # Daily max temp for the specific year
     daily_url = f"https://psl.noaa.gov/thredds/dodsC/Datasets/cpc_global_temp/tmax.{year}.nc"
-    # Climatology from 1981–2010 (precomputed 365-day average)
     clim_url = "https://psl.noaa.gov/thredds/dodsC/Datasets/cpc_global_temp/tmax.day.ltm.1981-2010.nc"
 
     # === Load daily max temp for the day ===
     tmax_ds = xr.open_dataset(daily_url, engine='netcdf4')
-    tmax_day = tmax_ds['tmax'].sel(time=target_date)
+    tmax_day = tmax_ds['tmax'].sel(time=target_date, method='nearest')
 
     # === Load climatology and match day ===
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    clim_ds = xr.open_dataset(clim_url, engine='netcdf4', decode_times=time_coder)
-    clim_day = clim_ds['tmax'].isel(time=dayofyear - 1)  # dayofyear is 1-based
+    # use_cftime=True avoids relying on xr.coders.CFDatetimeCoder,
+    # which only exists in xarray >= 2024.09.0
+    clim_ds = xr.open_dataset(clim_url, engine='netcdf4', use_cftime=True)
+    clim_day = clim_ds['tmax'].isel(time=clim_dayofyear - 1)  # dayofyear is 1-based
 
     # === Compute anomaly (daily - climatology) ===
     anomaly = tmax_day - clim_day
