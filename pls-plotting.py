@@ -142,7 +142,7 @@ def plot(target_date,anomaly):
     ax.text(-0.01, -0.05, 'Data: NOAA CPC  •  Map: @us-climate-bot.bsky.social', 
         transform=ax.transAxes, fontsize=9, color='gray', ha='left', va='top')
 
-    ax.set_title(f'U.S. Temperature Difference from Normal:\n{target_date} (°C)', fontsize=14)
+    ax.set_title(f'U.S. High Temp Deviation from Mean:\n{target_date} (°C)', fontsize=14)
     plt.tight_layout(pad=2)
 
     #more formatting stuff for aesthetics
